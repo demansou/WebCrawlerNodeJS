@@ -1,6 +1,6 @@
 /// <reference path="jquery.d.ts" />
 $(document).ready(function () {
-    $.getJSON("/fake-data.json", function (data) {
+    $.getJSON("/example_json/fake-data.json", function (data) {
         console.log(data);
         var graph = new CrawlerGraph();
         for (var i = 0, len = data.packets.length; i < len; i++) {

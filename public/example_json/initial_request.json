@@ -1,0 +1,7 @@
+﻿{
+  "start-page": "www.amazon.com",
+  "search-type": "breadth",
+  "keyword": "toaster",
+  "page-limit": 10,
+  "depth-limit": 32
+}

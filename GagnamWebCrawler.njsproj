@@ -33,13 +33,18 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
     <Content Include="package.json" />
+    <Content Include="public\example_json\initial_response.json" />
+    <Content Include="public\example_json\packet_request.json" />
+    <Content Include="public\front.json" />
+    <Content Include="public\example_json\initial_request.json" />
     <Content Include="public\javascripts\crawler\crawler.js.map" />
     <Content Include="README.md" />
     <Compile Include="app.js" />
     <Content Include="public\favicon.ico" />
-    <Content Include="public\fake-data.json" />
+    <Content Include="public\example_json\fake-data.json" />
     <Compile Include="public\javascripts\crawler\crawler.js" />
     <Compile Include="public\javascripts\crawler\execute.js" />
+    <Compile Include="routes\crawl.js" />
     <Compile Include="routes\index.js" />
     <Content Include="views\index.html" />
     <Content Include="obj\Debug\GagnamWebCrawler.njsproj.FileListAbsolute.txt" />
@@ -60,6 +65,7 @@
     <Folder Include="public\images" />
     <Folder Include="public\javascripts" />
     <Folder Include="public\javascripts\crawler\" />
+    <Folder Include="public\example_json\" />
     <Folder Include="public\stylesheets" />
     <Folder Include="routes" />
     <Folder Include="views" />
