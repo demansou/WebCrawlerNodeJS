@@ -67,6 +67,9 @@ function crawlerTool(requestObj, callback){
                 callback(err)
             }
             else {
+                var randomChild = [];
+                randomChild.push(callbackObj.children[Math.floor((Math.random() * callbackObj.children.length))]);
+                callbackObj.children = randomChild;
                 callback(null, callbackObj)
             }
         });
@@ -83,6 +86,7 @@ function crawlerTool(requestObj, callback){
  *
  * @param parent
  * @param url
+ * @param keyword
  * @param callback
  */
 
@@ -91,7 +95,7 @@ function crawlerWrapper(parent, url, keyword, callback){
     // need to accept null as returnable
     // OR process data beforehand to ensure url is never null or undefined
     if (url === null || url === undefined) {
-        console.log("Error: No URL received for crawling.")
+        console.log("Error: No URL received for crawling.");
         return null;
     }
     else {
@@ -128,7 +132,6 @@ function crawlerWrapper(parent, url, keyword, callback){
  * function isValidAnchor()
  *
  * @param url
- * @param linksCrawled
  * @param callback
  */
 
