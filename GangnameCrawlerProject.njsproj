@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{da7cce33-d93f-4257-b0ed-11493b85a5d1}</ProjectGuid>
+    <ProjectGuid>{1875169a-e043-404f-9231-a1d6219e605f}</ProjectGuid>
     <ProjectHome />
     <ProjectView>ShowAllFiles</ProjectView>
     <StartupFile>bin\www</StartupFile>
@@ -21,45 +21,46 @@
     <TypeScriptJSXEmit>None</TypeScriptJSXEmit>
     <TypeScriptCompileOnSaveEnabled>True</TypeScriptCompileOnSaveEnabled>
     <TypeScriptNoImplicitAny>False</TypeScriptNoImplicitAny>
-    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
     <TypeScriptRemoveComments>False</TypeScriptRemoveComments>
-    <TypeScriptOutFile>crawler.js</TypeScriptOutFile>
-    <TypeScriptOutDir>public\javascripts\crawler\</TypeScriptOutDir>
+    <TypeScriptOutFile>crawler-frontend.js</TypeScriptOutFile>
+    <TypeScriptOutDir>C:\Users\Chase\Documents\GitHub\GagnamCrawlerProject\public\javascripts\crawler</TypeScriptOutDir>
     <TypeScriptGeneratesDeclarations>False</TypeScriptGeneratesDeclarations>
     <TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
     <TypeScriptMapRoot />
     <TypeScriptSourceRoot />
+    <TypeScriptModuleKind>AMD</TypeScriptModuleKind>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
+    <Content Include="bin\www" />
     <Content Include="package.json" />
-    <Content Include="public\javascripts\crawler\crawler.js.map" />
     <Content Include="README.md" />
     <Compile Include="app.js" />
     <Content Include="public\favicon.ico" />
     <Content Include="public\fake-data.json" />
-    <Compile Include="public\javascripts\crawler\crawler.js" />
-    <Compile Include="public\javascripts\crawler\execute.js" />
+    <Compile Include="crawler.js" />
+    <Compile Include="public\javascripts\crawler\crawler-frontend.js" />
+    <Compile Include="routes\crawl.js" />
     <Compile Include="routes\index.js" />
     <Content Include="views\index.html" />
     <Content Include="obj\Debug\GagnamWebCrawler.njsproj.FileListAbsolute.txt" />
     <Content Include="obj\Debug\TypeScriptCompilerOutput.txt" />
+    <Content Include="public\stylesheets\style.css" />
     <TypeScriptCompile Include="public\javascripts\crawler\crawler-graph.ts" />
     <TypeScriptCompile Include="public\javascripts\crawler\crawler-node.ts" />
     <TypeScriptCompile Include="public\javascripts\crawler\crawler-packet-parent.ts" />
     <TypeScriptCompile Include="public\javascripts\crawler\crawler-packet.ts" />
     <TypeScriptCompile Include="public\javascripts\crawler\jquery.d.ts" />
     <TypeScriptCompile Include="public\javascripts\crawler\map.ts" />
-    <Content Include="public\stylesheets\style.css" />
+    <Compile Include="public\javascripts\crawler\execute.js" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="bin" />
     <Folder Include="obj" />
     <Folder Include="obj\Debug" />
     <Folder Include="public" />
-    <Folder Include="public\images" />
     <Folder Include="public\javascripts" />
-    <Folder Include="public\javascripts\crawler\" />
+    <Folder Include="public\javascripts\crawler" />
     <Folder Include="public\stylesheets" />
     <Folder Include="routes" />
     <Folder Include="views" />
