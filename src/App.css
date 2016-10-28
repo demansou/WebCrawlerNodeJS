@@ -1,0 +1,67 @@
+.App, .Home-root {
+  text-align: center;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.App-header {
+  background-color: #000033;
+  height: 100px;
+  width: 100%;
+  padding: 20px;
+  color: white;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  border-bottom: solid 3px #000000;
+}
+
+.Title-and-Logo {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-family: 'Rubik', sans-serif;
+}
+
+#App-title {
+  text-decoration: none;
+  color: #FFFFFF;
+}
+
+.Logo {
+  height: 100px;
+  margin-right: 20px;
+}
+
+.Crawl-form, .History-section {
+  width: 70%;
+  border: solid 3px #000000;
+  margin-top: 50px;
+  padding: 30px 30px 30px 50px;
+  box-sizing: border-box;
+  background-color: #E0FFFF;
+  text-align: left;
+  max-width: 800px;
+}
+
+.Visualization {
+  margin-top: 30px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#crawlVisualization {
+  border: solid 3px #000000;
+  background-color: #FFFFFF;
+  display: none;
+}
+
+.Submit-button {
+  margin-left: 85%;
+}
