@@ -2,7 +2,6 @@
 {
     root: CrawlerNode;
     map: Map<CrawlerNode>;
-    id: number;
 
     constructor()
     {
