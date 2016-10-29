@@ -4,6 +4,10 @@ var crawler = require('../crawler.js');
 /* GET home page. */
 router.post('/', function (req, res, next) {
 
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+
     if (req.body['id'] == null)
     {
         if (req.body['startPage'] == null || req.body['startPage'].indexOf("http") !== 0)
