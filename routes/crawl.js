@@ -37,6 +37,8 @@ router.post('/', function (req, res, next) {
         }
 
         var requestObj = {
+            id: null,
+            parent: null,
             startPage: req.body['startPage'],
             searchType: req.body['searchType'],
             keyword: req.body['keyword'],
