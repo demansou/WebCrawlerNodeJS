@@ -101,3 +101,26 @@ crawler.crawlerTool(requestObj4, function(err, callbackObj){
         console.log(callbackObj);
     }
 });
+
+/*
+test for `http://www.google.com` error - Lisa frontend 10/30/2016
+ */
+
+var requestObj5 = {
+    id: "testerror1",
+    parent: null,
+    startPage: "http://www.google.com/",
+    searchType: "breadth",
+    keyword: "a_keyword",
+    pageLimit: 10,
+    depthLimit: 5
+};
+
+crawler.crawlerTool(requestObj5, function(err, callbackObj){
+    if (err) {
+        console.log(err);
+    }
+    else {
+        console.log(callbackObj);
+    }
+});

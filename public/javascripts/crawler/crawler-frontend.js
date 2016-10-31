@@ -10,13 +10,15 @@ var CrawlerGraph = (function () {
     CrawlerGraph.prototype.getValue = function (url) {
         return this.map.getValue(url);
     };
-    CrawlerGraph.prototype.requestPacket = function (startPage, searchType, keyword, pageLimit, depthLimit, callback) {
+    CrawlerGraph.prototype.requestPacket = function (id, parent, startPage, searchType, keyword, pageLimit, depthLimit, callback) {
         var g = this;
         //User Update No Username
         $.ajax({
             type: "POST",
             url: "http://localhost:3000/crawl",
             data: {
+                id: id,
+                parent: parent,
                 startPage: startPage,
                 searchType: searchType,
                 keyword: keyword,

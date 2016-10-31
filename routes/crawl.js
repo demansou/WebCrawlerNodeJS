@@ -1,6 +1,7 @@
 ﻿var express = require('express');
 var router = express.Router();
 var crawler = require('../crawler.js');
+
 /* GET home page. */
 router.post('/', function (req, res, next) {
 
@@ -47,18 +48,24 @@ router.post('/', function (req, res, next) {
         };
 
         crawler.crawlerTool(requestObj, function (err, result) {
-
-            if (err)
-            {
+            if (err) {
                 res.send({
                     success: false, message: "The crawler had an unexpected failure.", data: null
                 });
             }
-            else
-            {
+            else {
                 result['success'] = true;
                 result['message'] = "crawler successfully returned value";
                 res.send(result);
+                if (requestObj.searchType === "breadth") {
+
+                }
+                else if (requestObj.searchType === "depth") {
+
+                }
+                else {
+
+                }
             }
         });
     }

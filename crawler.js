@@ -50,6 +50,7 @@ exports.crawlerTool = crawlerTool;
 //          http://stack.com,
 //      ]
 // }
+//
 ////////////////////////////////////////////////////////////////
 
 /**
@@ -72,19 +73,7 @@ function crawlerTool(requestObj, callback){
                 else {
                     callback(null, callbackObj);
                 }
-                /*
-                if (requestObj.depthLimit > 0) {
-                    requestObj.depthLimit -= 1;
-                    requestObj.parent = {
-                        "title": callbackObj.title,
-                        "url": callbackObj.url
-                    };
-                    for (var i = 0; i < callbackObj.children.length; i++) {
-                        requestObj.startPage = callbackObj.children[i];
-                        crawlerTool(requestObj, function(err, callbackObj){});
-                    }
-                }
-                 */
+
             });
         }
         else if (requestObj.searchType === "depth") {
@@ -97,17 +86,6 @@ function crawlerTool(requestObj, callback){
                     randomChild.push(callbackObj.children[Math.floor((Math.random() * callbackObj.children.length))]);
                     callbackObj.children = randomChild;
                     callback(null, callbackObj);
-                    /*
-                    if (requestObj.depthLimit > 0) {
-                        requestObj.depthLimit -= 1;
-                        requestObj.parent = {
-                            "title": callbackObj.title,
-                            "url": callbackObj.url
-                        };
-                        requestObj.startPage = callbackObj.children[0];
-                        crawlerTool(requestObj, function(err, callbackObj){});
-                    }
-                    */
                 }
             });
         }
