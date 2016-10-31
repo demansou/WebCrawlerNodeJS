@@ -2,6 +2,9 @@
 var router = express.Router();
 var crawler = require('../crawler.js');
 
+/* EXPORTS */
+module.exports = router;
+
 /* GET home page. */
 router.post('/', function (req, res, next) {
 
@@ -44,32 +47,83 @@ router.post('/', function (req, res, next) {
             searchType: req.body['searchType'],
             keyword: req.body['keyword'],
             pageLimit: parseInt(req.body['pageLimit']),
-            depthLimit: parseInt(req.body['depthLimit'])
+            depthLimit: 1
+            //depthLimit: parseInt(req.body['depthLimit'])
         };
 
-        crawler.crawlerTool(requestObj, function (err, result) {
+        if (requestObj.searchType === "breadth") {
+            breadthCrawler(requestObj, res);
+        }
+        else if (requestObj.searchType === "depth") {
+            depthCrawler(requestObj, res);
+        }
+        else {
+            res.send({
+                success: false,
+                message: "Error: invalid search type",
+                data: null
+            });
+        }
+    }
+});
+
+function depthCrawler(requestObj, res){
+    if (requestObj.depthLimit > 0) {
+        crawler.crawlerTool(requestObj, function(err, callbackObj){
             if (err) {
+                console.log(err);
                 res.send({
-                    success: false, message: "The crawler had an unexpected failure.", data: null
+                    success: false,
+                    message: err,
+                    data: null
                 });
             }
             else {
-                result['success'] = true;
-                result['message'] = "crawler successfully returned value";
-                res.send(result);
-                if (requestObj.searchType === "breadth") {
+                res.send({
+                    success: true,
+                    message: "crawler successfully returned depth crawl",
+                    data: callbackObj
+                });
+                requestObj.parent = {
+                    title: callbackObj.title,
+                    url: callbackObj.url
+                };
+                requestObj.startPage = callbackObj.children[0];
+                requestObj.depthLimit -= 1;
+                depthCrawler(requestObj, res);
+            }
+        })
+    }
+}
 
-                }
-                else if (requestObj.searchType === "depth") {
-
-                }
-                else {
-
+function breadthCrawler(requestObj, res){
+    if (requestObj.depthLimit > 0) {
+        crawler.crawlerTool(requestObj, function(err, callbackObj){
+            if (err) {
+                console.log(err);
+                res.send({
+                    success: false,
+                    message: err,
+                    data: null
+                });
+            }
+            else {
+                res.send({
+                    success: true,
+                    message: "crawler successfully returned depth crawl",
+                    data: callbackObj
+                });
+                var newDepth = requestObj.depthLimit - 1;
+                requestObj.parent = {
+                    title: callbackObj.title,
+                    url: callbackObj.url
+                };
+                for (var i = 0; i < callbackObj.children.length; i++) {
+                    requestObj.startPage = callbackObj.children[i];
+                    requestObj.depthLimit = newDepth;
+                    depthCrawler(requestObj, res);
                 }
             }
-        });
+        })
     }
-
-});
-
-module.exports = router;
+}
