@@ -220,3 +220,8 @@ var Map = (function () {
     return Map;
 }());
 //# sourceMappingURL=crawler-frontend.js.map
+
+exports.CrawlerNode = CrawlerNode;
+exports.CrawlerPacketParent = CrawlerPacketParent;
+exports.CrawlerGraph = CrawlerGraph;
+exports.CrawlerPacket = CrawlerPacket;
