@@ -12,63 +12,6 @@ var parser = require('url');
 
 exports.crawlerTool = crawlerTool;
 
-////////////////////////////////////////////////////////////////
-//
-//  INCOMING DATA:
-//  var requestObj = {
-//      "parent": {
-//          "title": title,
-//          "url": url
-//      } || null,
-//      "startPage": url,
-//      "searchType": "breadth" || "depth"
-//      "keyword": keyword,
-//      "pageLimit": pageLimit,
-//      "depth": depth,
-//      "depthLimit": depthLimit
-//  }
-//
-////////////////////////////////////////////////////////////////
-//
-//  RETURN DATA:
-//  var callbackObj = {
-//      "id": id,
-//      "parent": {
-//          "title": title,
-//          "url": url
-//      }||null,
-//      "title": title,
-//      "url": url,
-//      "children": [
-//          http://array.com,
-//          http://of.com,
-//          http://links.com,
-//          http://to.com,
-//          http://add.com,
-//          http://to.com,
-//          http://queue.com,
-//          http://or.com,
-//          http://stack.com,
-//      ]
-// }
-//
-////////////////////////////////////////////////////////////////
-//
-//  NEW RETURN OBJECT
-//  var parentObj = CrawlerTools.CrawlerPacketParent(title, url);
-//  parentObj.title
-//  parentObj.url
-//
-//  var urlObj = CrawlerTools.CrawlerNode(parentObj, title, url);
-//  urlObj.parent.title
-//  urlObj.parent.url
-//  urlObj.title
-//  urlObj.url
-//  urlObj.children[]
-//  urlObj.children.length
-//
-////////////////////////////////////////////////////////////////
-
 /**
  * Translates a crawler request into crawler parameters
  * and begins crawling

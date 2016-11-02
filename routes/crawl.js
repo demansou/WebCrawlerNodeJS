@@ -56,12 +56,15 @@ router.post('/', function (req, res, next) {
 
         var graphObj = new crawlerFrontend.CrawlerGraph();
 
+        // initialize cache object at memory location denoted by unique id
+        cache.put(requestObj.id, graphObj, 300000);
+
         /* iterate crawler */
         if (requestObj.searchType === "breadth") {
-            breadthCrawler(requestObj, graphObj);
+            breadthCrawler(requestObj);
         }
         else if (requestObj.searchType === "depth") {
-            depthCrawler(requestObj, graphObj);
+            depthCrawler(requestObj);
         }
 
         /* respond to client request */
@@ -85,12 +88,16 @@ router.post('/', function (req, res, next) {
  *
  * @param requestObj
  */
-function depthCrawler(requestObj, graphObj){
+function depthCrawler(requestObj){
     crawler.crawlerTool(requestObj, function(err, callbackObj){
         if (err) {
             console.log(err);
         }
         else {
+            // gets graphObj from memory
+            var graphObj = cache.get(requestObj.id);
+            // deletes current object stored at memory location
+            cache.del(requestObj.id);
             // hashes callback object
             graphObj.addPacket(callbackObj);
             // puts in memory at key: request id for 5 minutes
@@ -111,12 +118,16 @@ function depthCrawler(requestObj, graphObj){
  *
  * @param requestObj
  */
-function breadthCrawler(requestObj, graphObj){
+function breadthCrawler(requestObj){
     crawler.crawlerTool(requestObj, function(err, callbackObj){
         if (err) {
             console.log(err);
         }
         else {
+            // gets graphObj from memory
+            var graphObj = cache.get(requestObj.id);
+            // deletes current object stored at memory location
+            cache.del(requestObj.id);
             // hashes callback object
             graphObj.addPacket(callbackObj);
             // puts in memory at key: request id for 5 minutes
