@@ -12,6 +12,9 @@ var parser = require('url');
 
 exports.crawlerTool = crawlerTool;
 
+/* For testing, comment out when done */
+exports.isRelativeUrl = isRelativeUrl;
+
 /**
  * Translates a crawler request into crawler parameters
  * and begins crawling
@@ -66,34 +69,59 @@ function crawlerTool(requestObj, callback){
  * @param callback
  */
 function crawlerWrapper(requestObj, callback){
+    /* crawlUrl */
     crawlUrl(requestObj.startPage, function (err, callbackObj) {
         if (err) {
             callback(err);
         }
         else {
-            if(callbackObj.children.length <= 0) {
-                callback("Error: Children for " + callbackObj.url + " not found.");
+            /* CREATE CALLBACK OBJECT FOR CACHE */
+            var parentObj;
+            if (requestObj.parent === null) {
+                parentObj = null;
             }
             else {
-                var parentObj;
-                if (requestObj.parent === null) {
-                    parentObj = null;
-                }
-                else {
-                    parentObj = {
-                        title: requestObj.parent.title,
-                        url: requestObj.parent.url
-                    };
-                }
-                var urlObj = {
-                    parent: parentObj,
-                    title: callbackObj.title,
-                    url: callbackObj.url,
-                    children: []
+                parentObj = {
+                    title: requestObj.parent.title,
+                    url: requestObj.parent.url
                 };
+            }
+            var urlObj = {
+                parent: parentObj,
+                title: callbackObj.title,
+                url: callbackObj.url,
+                children: []
+            };
+            /* GIVE EMPTY CHILD LIST IF NO CHILDREN */
+            if(callbackObj.children.length <= 0) {
+                /*
+                callback("Error: Children for " + callbackObj.url + " not found.");
+                */
+                /* */
+                callback(null, urlObj);
+            }
+            /* FILL CHILD LIST WITH CHILDREN IF CHILDREN OF URL PRESENT */
+            else {
                 for (var i = 0; i < callbackObj.children.length; i++) {
-                    if (isValidChild(callbackObj.children[i].attribs.href, urlObj.url)) {
-                        urlObj.children.push(callbackObj.children[i].attribs.href);
+                    if (isValidChild(callbackObj.children[i].attribs.href)) {
+                        var tempUrl = "";
+                        /* BUILD ABSOLUTE URL IF RELATIVE URL */
+                        if (isRelativeUrl(callbackObj.children[i].attribs.href)) {
+                            /* REMOVES PATHNAME FROM PARENT ABSOLUTE URL */
+                            var host = requestObj.startPage.replace(parser.parse(requestObj.startPage).pathname, "") ;
+                            tempUrl = host + callbackObj.children[i].attribs.href;
+                            console.log(tempUrl);
+
+                        }
+                        /* DO NOT CHANGE ABSOLUTE URL */
+                        else if (isAbsoluteUrl(callbackObj.children[i].attribs.href)) {
+                            tempUrl = callbackObj.children[i].attribs.href;
+                        }
+                        /* IF NOT VALID URL, SKIP */
+                        else {
+                            continue;
+                        }
+                        urlObj.children.push(tempUrl);
                     }
                 }
                 callback(null, urlObj);
@@ -136,42 +164,32 @@ function crawlUrl(url, callback){
 
 /**
  * function returns true if anchor href attribute is:
- * defined, not previously visited, not the local domain,
- * not a `mailto` link, not a `javascript` link,
+ * defined, not a `mailto` link, not a `javascript` link,
  * not a relative link, not a hash link, and not a file
  * unless it's a HTML file
  * function returns false if it meets any of those criteria
  *
  * @param child
- * @param url
  * @returns {boolean}
  */
-function isValidChild(child, url){
+function isValidChild(child){
     if (child != undefined) {
-        // filers out local absolute urls
-        if (child.search(parser.parse(url).hostname) !== -1) {
-            return false;
-        }
         // filters out mailto links
-        else if (child.startsWith("mailto:")) {
+        if (child.startsWith("mailto:")) {
             return false;
         }
         // filters out javascript links
-        else if (child.startsWith("javascript:")) {
-            return false;
-        }
-        // filters out relative urls (link to same site)
-        else if (child.startsWith("/")) {
+        if (child.startsWith("javascript:")) {
             return false;
         }
         // filters out hash links
-        else if (child.startsWith("#")) {
+        if (child.startsWith("#")) {
             return false;
         }
         // filters out files unless it's an HTML file
         // other files have no possible links
         // must be placed after other filters so that it doesn't catch local urls
-        else if (parser.parse(child).pathname !== undefined && parser.parse(child).pathname !== null) {
+        if (parser.parse(child).pathname !== undefined && parser.parse(child).pathname !== null) {
             if (parser.parse(child).pathname.search(".") !== -1) {
                 if (parser.parse(child).pathname.lastIndexOf(".") > 0) {
                     if (!parser.parse(child).pathname.substr(parser.parse(child).pathname.lastIndexOf(".") + 1).startsWith("html")) {
@@ -183,4 +201,44 @@ function isValidChild(child, url){
         return true;
     }
     return false;
+}
+
+/**
+ * Function takes an anchor href attribute value
+ * and
+ *
+ * child undefined check happens in isValidChild
+ * @param child
+ * @returns {boolean}
+ */
+function isRelativeUrl(child){
+    if (child != undefined) {
+        /* Special cases where links begin with `/` */
+        if (child.startsWith("/")) {
+            if (/\/\//.test(child)) {
+                return false;
+            }
+        }
+        /* Most cases where links don't begin with `/` */
+        if (!child.startsWith("/")) {
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Function takes an anchor href attribute value and compares
+ * the protocol with
+ * @param child
+ */
+function isAbsoluteUrl(child){
+    if (child != undefined) {
+        if(!child.startsWith("http") || !child.startsWith("https")){
+            return false;
+        }
+        /* protocol is http or https */
+        return true;
+    }
 }
