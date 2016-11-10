@@ -97,7 +97,6 @@ function crawlerWrapper(requestObj, callback){
                 /*
                 callback("Error: Children for " + callbackObj.url + " not found.");
                 */
-                /* */
                 callback(null, urlObj);
             }
             /* FILL CHILD LIST WITH CHILDREN IF CHILDREN OF URL PRESENT */
@@ -107,10 +106,16 @@ function crawlerWrapper(requestObj, callback){
                         var tempUrl = "";
                         /* BUILD ABSOLUTE URL IF RELATIVE URL */
                         if (isRelativeUrl(callbackObj.children[i].attribs.href)) {
-                            /* REMOVES PATHNAME FROM PARENT ABSOLUTE URL */
-                            var host = requestObj.startPage.replace(parser.parse(requestObj.startPage).pathname, "") ;
-                            tempUrl = host + callbackObj.children[i].attribs.href;
-                            console.log(tempUrl);
+                            /* PATHNAME CAN BE `/` SO FILTER MUST BE FOR LENGTH > 1 */
+                            if (parser.parse(requestObj.startPage).pathname.length >= 2) {
+                                /* REMOVES PATHNAME FROM PARENT ABSOLUTE URL */
+                                var host = requestObj.startPage.replace(parser.parse(requestObj.startPage).pathname, "") ;
+                                tempUrl = host + callbackObj.children[i].attribs.href;
+                                // console.log(parser.parse(requestObj.startPage).pathname);
+                                // console.log(tempUrl);
+                            }
+
+
 
                         }
                         /* DO NOT CHANGE ABSOLUTE URL */
