@@ -1,8 +1,4 @@
 /**
- * Created by Daniel Mansour on 11/1/2016.
- */
-
-/**
  * Client requests depth crawl
  *
  * @type {{startPage: string, searchType: string, keyword: string, pageLimit: number, depthLimit: number}}

@@ -7,6 +7,10 @@ var cache = require('memory-cache');
 /* EXPORTS */
 module.exports = router;
 
+/* TEST EXPORTS COMMENT OUT WHEN FINISHED TESTING */
+module.depthCrawler = depthCrawler;
+module.breadthCrawler = breadthCrawler;
+
 /* GET home page. */
 router.post('/', function (req, res, next) {
 
@@ -108,7 +112,7 @@ function depthCrawler(requestObj){
             };
             requestObj.startPage = callbackObj.children[0];
             requestObj.depth += 1;
-            depthCrawler(requestObj, graphObj);
+            depthCrawler(requestObj);
         }
     })
 }
@@ -140,7 +144,7 @@ function breadthCrawler(requestObj){
             for (var i = 0; i < callbackObj.children.length; i++) {
                 requestObj.startPage = callbackObj.children[i];
                 requestObj.depth = newDepth;
-                breadthCrawler(requestObj, graphObj);
+                breadthCrawler(requestObj);
             }
         }
     })
