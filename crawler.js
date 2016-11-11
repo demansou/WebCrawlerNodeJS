@@ -111,22 +111,18 @@ function crawlerWrapper(requestObj, callback){
                                 /* REMOVES PATHNAME FROM PARENT ABSOLUTE URL */
                                 var host = requestObj.startPage.replace(parser.parse(requestObj.startPage).pathname, "") ;
                                 tempUrl = host + callbackObj.children[i].attribs.href;
-                                // console.log(parser.parse(requestObj.startPage).pathname);
-                                // console.log(tempUrl);
+                                urlObj.children.push(tempUrl);
                             }
-
-
-
                         }
                         /* DO NOT CHANGE ABSOLUTE URL */
                         else if (isAbsoluteUrl(callbackObj.children[i].attribs.href)) {
                             tempUrl = callbackObj.children[i].attribs.href;
+                            urlObj.children.push(tempUrl);
                         }
                         /* IF NOT VALID URL, SKIP */
                         else {
                             continue;
                         }
-                        urlObj.children.push(tempUrl);
                     }
                 }
                 callback(null, urlObj);

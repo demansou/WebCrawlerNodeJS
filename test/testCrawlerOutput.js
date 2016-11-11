@@ -14,13 +14,28 @@ var requestObj1 = {
     depthLimit: 5
 };
 
+var requestObj2 = {
+    id: generateId(),
+    parent: null,
+    startPage: "http://www.google.com",
+    searchType: "breadth",
+    keyword: "word",
+    pageLimit: 10,
+    depth: 0,
+    depthLimit: 2
+};
+
 /* GRAPH OBJECTS */
 var graphObj1 = new crawlerFrontend.CrawlerGraph();
+var graphObj2 = new crawlerFrontend.CrawlerGraph();
 
 /* CACHE GRAPH */
 cache.put(requestObj1.id, graphObj1, 300000);
+cache.put(requestObj2.id, graphObj2, 300000);
 
-depthCrawler(requestObj1);
+// depthCrawler(requestObj1);
+
+breadthCrawler(requestObj2);
 
 /**
  * function which performs crawlerTool in a depth crawling manner
