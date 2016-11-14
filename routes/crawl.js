@@ -1,15 +1,19 @@
 ﻿var express = require('express');
+var cache = require('memory-cache');
+var cookieParser = require('cookie');
 var router = express.Router();
+
 var crawler = require('../crawler.js');
 var crawlerFrontend = require('../public/javascripts/crawler/crawler-frontend.js');
-var cache = require('memory-cache');
+
 
 /* EXPORTS */
 module.exports = router;
 
 /* TEST EXPORTS COMMENT OUT WHEN FINISHED TESTING */
-module.depthCrawler = depthCrawler;
-module.breadthCrawler = breadthCrawler;
+// module.depthCrawler = depthCrawler;
+// module.breadthCrawler = breadthCrawler;
+
 
 /* GET home page. */
 router.post('/', function (req, res, next) {
@@ -18,13 +22,14 @@ router.post('/', function (req, res, next) {
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
 
+
     if (req.body['id'] == null)
     {
         if (req.body['startPage'] == null || req.body['startPage'].indexOf("http") !== 0)
         {
             res.json({ success: false, message: "Error: startPage was not included as a parameter or didn't have a valid http starting prefix.", data: null });
             return;
-        } 
+        }
 
         if (req.body['searchType'] == null || (req.body['searchType'] !== "depth" && req.body['searchType'] !== "breadth"))
         {
@@ -58,9 +63,14 @@ router.post('/', function (req, res, next) {
             depthLimit: parseInt(req.body['depthLimit'])
         };
 
-        var graphObj = new crawlerFrontend.CrawlerGraph();
+        /* update header with latest cookie bit */
+        res.header("Set-Cookie", cookieParser.serialize(requestObj.id, requestObj.startPage, {
+            /* sets max age for 1 hour */
+            maxAge: 60 * 60
+        }));
 
-        // initialize cache object at memory location denoted by unique id
+        /* initialize cache object at memory location denoted by unique id */
+        var graphObj = new crawlerFrontend.CrawlerGraph();
         cache.put(requestObj.id, graphObj, 300000);
 
         /* iterate crawler */
