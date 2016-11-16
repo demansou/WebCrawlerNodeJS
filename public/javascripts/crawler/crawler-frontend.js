@@ -2,23 +2,50 @@ var CrawlerGraph = (function () {
     function CrawlerGraph() {
         this.root = null;
         this.map = new Map();
+        this.id = null;
+        this.domain = "http://localhost:3000/crawl";
     }
     CrawlerGraph.prototype.clear = function () {
+        this.id = null;
         this.root = null;
         this.map.clear();
     };
     CrawlerGraph.prototype.getValue = function (url) {
         return this.map.getValue(url);
     };
-    CrawlerGraph.prototype.requestPacket = function (id, parent, startPage, searchType, keyword, pageLimit, depthLimit, callback) {
+    CrawlerGraph.prototype.requestPacketById = function (callback) {
         var g = this;
         //User Update No Username
         $.ajax({
             type: "POST",
-            url: "http://localhost:3000/crawl",
+            url: this.domain,
             data: {
-                id: id,
-                parent: parent,
+                id: this.id
+            },
+            success: function (response, status) {
+                if (response.success) {
+                    if (response.data !== null) {
+                        g.addPacket(response.data);
+                        callback(null, g, response.data);
+                        g.requestPacketById(callback);
+                    }
+                    else {
+                        this.id = null;
+                    }
+                }
+                else {
+                    callback(response, g, null);
+                }
+            }
+        });
+    };
+    CrawlerGraph.prototype.requestPacket = function (startPage, searchType, keyword, pageLimit, depthLimit, callback) {
+        var g = this;
+        //User Update No Username
+        $.ajax({
+            type: "POST",
+            url: this.domain,
+            data: {
                 startPage: startPage,
                 searchType: searchType,
                 keyword: keyword,
@@ -27,8 +54,15 @@ var CrawlerGraph = (function () {
             },
             success: function (response, status) {
                 if (response.success) {
-                    g.addPacket(response);
-                    callback(null, g, response);
+                    if (response.data !== null) {
+                        g.id = response.data.id;
+                        g.addPacket(response.data);
+                        callback(null, g, response.data);
+                        g.requestPacketById(callback);
+                    }
+                    else {
+                        this.id = null;
+                    }
                 }
                 else {
                     callback(response, g, null);
@@ -52,15 +86,18 @@ var CrawlerGraph = (function () {
         else {
             var value = this.map.getValue(packet.url);
             if (value == null) {
-                throw "Recieved a packet with a child that doesn't exist in the graph.";
+                throw { message: "Recieved a packet with a child that doesn't exist in the graph." };
             }
             //We have now visited so we know the title!
             value.title = packet.title;
             //Create the children for the node we didn't have before
             if (packet.children != null) {
                 for (var i = 0, len = packet.children.length; i < len; i++) {
-                    var node = new CrawlerNode(value, null, packet.children[i]);
-                    this.map.addKeyValue(node.url, node);
+                    var node = this.getValue(packet.children[i]);
+                    if (node == null) {
+                        node = new CrawlerNode(value, null, packet.children[i]);
+                        this.map.addKeyValue(node.url, node);
+                    }
                     value.children.push(node);
                 }
             }
@@ -220,8 +257,3 @@ var Map = (function () {
     return Map;
 }());
 //# sourceMappingURL=crawler-frontend.js.map
-
-exports.CrawlerNode = CrawlerNode;
-exports.CrawlerPacketParent = CrawlerPacketParent;
-exports.CrawlerGraph = CrawlerGraph;
-exports.CrawlerPacket = CrawlerPacket;
