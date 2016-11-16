@@ -1,134 +1,27 @@
+﻿var parser = require('url');
+var HashSet = require('hashset');
 var request = require('request');
 var cheerio = require('cheerio');
-var parser = require('url');
+var cache = require('memory-cache');
 
-////////////////////////////////////////////////////////////////
-//  Function for crawler.
-//  Must include request object.
-//  Returns value via callback.
-//  Import (Uses relative path):
-//      var crawler = require('./crawler.js');
-////////////////////////////////////////////////////////////////
-
-exports.crawlerTool = crawlerTool;
-
-/* For testing, comment out when done */
-exports.isRelativeUrl = isRelativeUrl;
+var Timeout = 1200000;
+var MaxPages = 10000;
+var MaxDepth = 32;
 
 /**
- * Translates a crawler request into crawler parameters
- * and begins crawling
- *
- * @param requestObj
- * @param callback
+ * Shuffles array in place.
+ * @param {Array} a items The array containing the items.
  */
-function crawlerTool(requestObj, callback){
-    // only calls function if depth < depthLimit
-    if (requestObj.depth < requestObj.depthLimit) {
-        // for now, just testing ability to callback correct data
-        if (requestObj.searchType === "breadth") {
-            crawlerWrapper(requestObj, function (err, callbackObj) {
-                if (err) {
-                    return callback(err);
-                }
-                else {
-                    callback(null, callbackObj);
-                }
-
-            });
-        }
-        else if (requestObj.searchType === "depth") {
-            crawlerWrapper(requestObj, function (err, callbackObj) {
-                if (err) {
-                    callback(err)
-                }
-                else {
-                    var randomChild = [];
-                    randomChild.push(callbackObj.children[Math.floor((Math.random() * callbackObj.children.length))]);
-                    callbackObj.children = randomChild;
-                    callback(null, callbackObj);
-                }
-            });
-        }
-        else {
-            callback("Error: Invalid search type parameters")
-        }
+function shuffle(a)
+{
+    var j, x, i;
+    for (i = a.length; i; i--)
+    {
+        j = Math.floor(Math.random() * i);
+        x = a[i - 1];
+        a[i - 1] = a[j];
+        a[j] = x;
     }
-    else {
-        console.log("End of crawl reached");
-        callback("Success: End of crawl reached");
-    }
-}
-
-/**
- * function filters DOM anchor elements for href attributes
- * and returns href attributes that meet requirements of
- * function isValidAnchor()
- *
- * @param requestObj
- * @param callback
- */
-function crawlerWrapper(requestObj, callback){
-    /* crawlUrl */
-    crawlUrl(requestObj.startPage, function (err, callbackObj) {
-        if (err) {
-            callback(err);
-        }
-        else {
-            /* CREATE CALLBACK OBJECT FOR CACHE */
-            var parentObj;
-            if (requestObj.parent === null) {
-                parentObj = null;
-            }
-            else {
-                parentObj = {
-                    title: requestObj.parent.title,
-                    url: requestObj.parent.url
-                };
-            }
-            var urlObj = {
-                parent: parentObj,
-                title: callbackObj.title,
-                url: callbackObj.url,
-                children: []
-            };
-            /* GIVE EMPTY CHILD LIST IF NO CHILDREN */
-            if(callbackObj.children.length <= 0) {
-                /*
-                callback("Error: Children for " + callbackObj.url + " not found.");
-                */
-                callback(null, urlObj);
-            }
-            /* FILL CHILD LIST WITH CHILDREN IF CHILDREN OF URL PRESENT */
-            else {
-                for (var i = 0; i < callbackObj.children.length; i++) {
-                    if (isValidChild(callbackObj.children[i].attribs.href)) {
-                        var tempUrl = "";
-                        /* BUILD ABSOLUTE URL IF RELATIVE URL */
-                        if (isRelativeUrl(callbackObj.children[i].attribs.href)) {
-                            /* PATHNAME CAN BE `/` SO FILTER MUST BE FOR LENGTH > 1 */
-                            if (parser.parse(requestObj.startPage).pathname.length >= 2) {
-                                /* REMOVES PATHNAME FROM PARENT ABSOLUTE URL */
-                                var host = requestObj.startPage.replace(parser.parse(requestObj.startPage).pathname, "") ;
-                                tempUrl = host + callbackObj.children[i].attribs.href;
-                                urlObj.children.push(tempUrl);
-                            }
-                        }
-                        /* DO NOT CHANGE ABSOLUTE URL */
-                        else if (isAbsoluteUrl(callbackObj.children[i].attribs.href)) {
-                            tempUrl = callbackObj.children[i].attribs.href;
-                            urlObj.children.push(tempUrl);
-                        }
-                        /* IF NOT VALID URL, SKIP */
-                        else {
-                            continue;
-                        }
-                    }
-                }
-                callback(null, urlObj);
-            }
-        }
-    })
 }
 
 /**
@@ -140,24 +33,35 @@ function crawlerWrapper(requestObj, callback){
  * @param url
  * @param callback
  */
-function crawlUrl(url, callback){
-   request(url, function (err, res, html) {
-        if (err) {
+function crawlUrl(url, callback) {
+    request(url, function (err, res, html) {
+        if (err)
+        {
             callback(err);
         }
-        else if (res.statusCode !== 200) {
+        else if (res.statusCode !== 200)
+        {
             var responseErr = "Error: HTTP Response " + res.statusCode;
             callback(responseErr);
         }
         else {
             var $ = cheerio.load(html);
             var title = $("title").text();
-            var children = $("html > body").find("a");
+            var children = $("html > body a");
+
             var callbackObj = {
                 title: title,
                 url: url,
-                children: children
+                children: []
             };
+
+            for (var i = 0; i < children.length; i++)
+            {
+                callbackObj.children.push(children[i].attribs.href);
+            }
+
+            shuffle(callbackObj.children);
+
             callback(null, callbackObj);
         }
     })
@@ -173,7 +77,7 @@ function crawlUrl(url, callback){
  * @param child
  * @returns {boolean}
  */
-function isValidChild(child){
+function isValidChild(child) {
     if (child != undefined) {
         // filters out mailto links
         if (child.startsWith("mailto:")) {
@@ -184,9 +88,11 @@ function isValidChild(child){
             return false;
         }
         // filters out hash links
-        if (child.startsWith("#")) {
+        if (child.startsWith("#"))
+        {
             return false;
         }
+
         // filters out files unless it's an HTML file
         // other files have no possible links
         // must be placed after other filters so that it doesn't catch local urls
@@ -212,7 +118,7 @@ function isValidChild(child){
  * @param child
  * @returns {boolean}
  */
-function isRelativeUrl(child){
+function isRelativeUrl(child) {
     if (child != undefined) {
         /* Special cases where links begin with `/` */
         if (child.startsWith("/")) {
@@ -230,16 +136,167 @@ function isRelativeUrl(child){
 }
 
 /**
- * Function takes an anchor href attribute value and compares
- * the protocol with
- * @param child
+ * Converts a url to a valid format for the crawler
+ * @param domain
+ * @param url
  */
-function isAbsoluteUrl(child){
-    if (child != undefined) {
-        if(!child.startsWith("http") || !child.startsWith("https")){
-            return false;
-        }
-        /* protocol is http or https */
-        return true;
-    }
+function convertURL(domain,url)
+{
+    if (!isValidChild(url))
+        return null;
+
+    //Remove query items
+    url = url.split('?')[0];
+
+    if (isRelativeUrl(url))
+        return domain + url;
+
+    return url;
 }
+
+/**
+ * function returns a randomized string of length 16 containing
+ * upper- and lower- alpha & num
+ * 62^16 possible permutations
+ *
+ * @returns {string}
+ */
+function generateId()
+{
+    var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    var idLength = 16;
+    var id = "";
+    for (var i = 0; i < idLength; i++) {
+        id += characters[Math.floor(Math.random() * characters.length)];
+    }
+    return id;
+}
+
+/**
+ * Create a crawl instance and return an associated id
+ * @param startPage
+ * @param searchType
+ * @param keyword
+ * @param pageLimit
+ * @param depthLimit
+ */
+function CreateCrawlInstance(startPage, searchType, keyword, pageLimit, depthLimit)
+{
+    var instance = {
+        id: generateId(),
+        searchType: searchType,
+        keyword: keyword,
+        pageLimit: pageLimit,
+        depthLimit: depthLimit,
+        map: new HashSet(),
+        queue: [{ depth: 0, parent: null, url: startPage }],
+        results: []
+    };
+
+    instance.map.add(startPage);
+
+    if (instance.depthLimit == null || instance.depthLimit > MaxDepth)
+        instance.depthLimit = MaxDepth;
+
+    if (instance.pageLimit == null || instance.pageLimit > MaxPages)
+        instance.pageLimit = MaxPages;
+
+    cache.put(instance.id, instance, Timeout);
+
+    return instance.id;
+}
+
+/**
+ * Get the next stage of the crawl
+ * @param id
+ * @param callback
+ */
+function IncrementCrawl(id,callback)
+{
+    var instance = cache.get(id);
+
+    if (instance == null)
+    {
+        callback({ success: false, message: "Crawler is finished or does not exist.", data: null}, null);
+        return;
+    }
+
+    if (instance.queue.length == 0)
+    {
+        cache.del(id);
+        callback(null,{success: true, message: "Crawler is finished.", data: null });
+        return;   
+    }
+
+
+    var page = null;
+    if (instance.searchType === "breadth")
+        page = instance.queue.shift();
+    else
+        page = instance.queue.pop();
+
+    crawlUrl(page.url, function (err, result) {
+
+        if (err || result == null)
+        {
+            IncrementCrawl(id, callback);
+            return;
+        }
+
+        var urlParse = parser.parse(page.url);
+        var domain = urlParse.protocol + "//" + urlParse.hostname;
+        var localSet = new HashSet();
+
+
+        for (var i = 0; i < result.children.length; i++)
+        {
+            //Attempt to convert a url to a valid format
+            var url = convertURL(domain, result.children[i]);
+
+            //URL is invalid remove from possible results
+            if (url == null || localSet.contains(url))
+            {
+                result.children.splice(i, 1); //Invalid url delete it from the results
+                i--;
+                continue;
+            }
+
+            //Set the child to the valid url format
+            result.children[i] = url;
+            localSet.add(url);
+
+            //We stop adding to the crawler once we have reached one of our limits
+            if (page.depth < instance.depthLimit && instance.map.length < instance.pageLimit)
+            {
+                if (instance.map.contains(url))
+                    continue;
+
+                //Add the new value to the queue/stack and add it to the map of already known sites
+                instance.map.add(url);
+                instance.queue.push({ depth: page.depth + 1, parent: page.url, url: url });
+            }
+        }
+
+        result.parent = page.parent;
+       
+        //Refresh the cache
+        cache.put(id, instance, Timeout);
+
+        result.id = id;
+        //Send back to the data transfer layer
+        callback(null, { success: true, message: "Page found.", data: result });
+    });
+}
+
+/**
+ * Delete the crawl
+ * @param id
+ */
+function EndCrawl(id)
+{
+    cache.del(id);
+}
+
+module.exports.CreateCrawlInstance = CreateCrawlInstance;
+module.exports.IncrementCrawl = IncrementCrawl;
+module.exports.EndCrawl = EndCrawl;
