@@ -31,9 +31,10 @@ function shuffle(a)
  * the DOM tree
  *
  * @param url
+ * @param keyword
  * @param callback
  */
-function crawlUrl(url, callback) {
+function crawlUrl(url, keyword, callback) {
     request(url, function (err, res, html) {
         if (err)
         {
@@ -48,6 +49,7 @@ function crawlUrl(url, callback) {
             var $ = cheerio.load(html);
             var title = $("title").text();
             var children = $("html > body a");
+            var htmlBodyText = $("html > body").text();
 
             var callbackObj = {
                 title: title,
@@ -55,9 +57,13 @@ function crawlUrl(url, callback) {
                 children: []
             };
 
-            for (var i = 0; i < children.length; i++)
-            {
-                callbackObj.children.push(children[i].attribs.href);
+            // search for keyword in html body text
+            // only parse children if keyword not present
+            if (containsText(htmlBodyText, keyword) === false) {
+                for (var i = 0; i < children.length; i++)
+                {
+                    callbackObj.children.push(children[i].attribs.href);
+                }
             }
 
             shuffle(callbackObj.children);
@@ -112,9 +118,8 @@ function isValidChild(child) {
 
 /**
  * Function takes an anchor href attribute value
- * and
- *
- * child undefined check happens in isValidChild
+ * and determines if is relative url. child
+ * undefined check happens in isValidChild
  * @param child
  * @returns {boolean}
  */
@@ -133,6 +138,24 @@ function isRelativeUrl(child) {
         return true;
     }
     return false;
+}
+
+/**
+ * Function takes page html body text and
+ * searches for keyword. if keyword is found,
+ * returns true, else returns false.
+ *
+ * var htmlBodyText = $('html > body').text();
+ *
+ * @param htmlBodyText
+ * @param keyword
+ * @returns {boolean}
+ */
+function containsText(htmlBodyText, keyword) {
+    if (htmlBodyText.search(keyword) === -1) {
+        return false;
+    }
+    return true;
 }
 
 /**
@@ -235,7 +258,7 @@ function IncrementCrawl(id,callback)
     else
         page = instance.queue.pop();
 
-    crawlUrl(page.url, function (err, result) {
+    crawlUrl(page.url, page.keyword, function (err, result) {
 
         if (err || result == null)
         {

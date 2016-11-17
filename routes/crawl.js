@@ -1,4 +1,5 @@
-﻿var express = require('express');
+﻿var Cookie = require('cookie');
+var express = require('express');
 var router = express.Router();
 var crawler = require('../crawler.js');
 
@@ -40,6 +41,14 @@ router.post('/', function (req, res, next) {
 
 
         id = crawler.CreateCrawlInstance(req.body['startPage'], req.body['searchType'], req.body['keyword'], req.body['pageLimit'], req.body['depthLimit']);
+
+        // create cookie header if creating new id
+        var cookieData = req.body['startPage'] + "$$" + req.body['keyword'];
+        var cookie = Cookie.serialize(id, cookieData, {
+            // max age: 60s/min * 60min/hr = 1 hr
+            maxAge: 60 * 60
+        });
+        res.header('Set-Cookie', cookie);
     }
 
     //Terminate the crawl if it makes sense
