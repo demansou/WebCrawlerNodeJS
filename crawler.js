@@ -59,7 +59,7 @@ function crawlUrl(url, keyword, callback) {
 
             // search for keyword in html body text
             // only parse children if keyword not present
-            if (containsText(htmlBodyText, keyword) === false) {
+            if (!containsText(htmlBodyText, keyword)) {
                 for (var i = 0; i < children.length; i++)
                 {
                     callbackObj.children.push(children[i].attribs.href);
@@ -258,7 +258,7 @@ function IncrementCrawl(id,callback)
     else
         page = instance.queue.pop();
 
-    crawlUrl(page.url, page.keyword, function (err, result) {
+    crawlUrl(page.url, instance.keyword, function (err, result) {
 
         if (err || result == null)
         {
