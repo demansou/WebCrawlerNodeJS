@@ -67,3 +67,12 @@ crawlUrl("http://google.com", "google", function (err, callback) {
         console.log(callback);
     }
 });
+
+crawlUrl("http://google.com", "howdy", function (err, callback) {
+    if (err) {
+        console.log(err);
+    }
+    else {
+        console.log(callback);
+    }
+});

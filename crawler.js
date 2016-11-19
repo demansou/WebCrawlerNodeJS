@@ -54,16 +54,13 @@ function crawlUrl(url, keyword, callback) {
             var callbackObj = {
                 title: title,
                 url: url,
-                children: []
+                children: [],
+                keywordFound: containsText(htmlBodyText, keyword)
             };
 
-            // search for keyword in html body text
-            // only parse children if keyword not present
-            if (containsText(htmlBodyText, keyword) === false) {
-                for (var i = 0; i < children.length; i++)
-                {
-                    callbackObj.children.push(children[i].attribs.href);
-                }
+            for (var i = 0; i < children.length; i++)
+            {
+                callbackObj.children.push(children[i].attribs.href);
             }
 
             shuffle(callbackObj.children);
@@ -258,7 +255,7 @@ function IncrementCrawl(id,callback)
     else
         page = instance.queue.pop();
 
-    crawlUrl(page.url, page.keyword, function (err, result) {
+    crawlUrl(page.url, instance.keyword, function (err, result) {
 
         if (err || result == null)
         {
@@ -266,37 +263,44 @@ function IncrementCrawl(id,callback)
             return;
         }
 
-        var urlParse = parser.parse(page.url);
-        var domain = urlParse.protocol + "//" + urlParse.hostname;
-        var localSet = new HashSet();
+        if (result.keywordFound) {
+            // keyword found, end crawling and clear queue
+            instance.queue = [];
+        }
+        else {
+            // keyword not found, continue crawling
+            var urlParse = parser.parse(page.url);
+            var domain = urlParse.protocol + "//" + urlParse.hostname;
+            var localSet = new HashSet();
 
 
-        for (var i = 0; i < result.children.length; i++)
-        {
-            //Attempt to convert a url to a valid format
-            var url = convertURL(domain, result.children[i]);
-
-            //URL is invalid remove from possible results
-            if (url == null || localSet.contains(url))
+            for (var i = 0; i < result.children.length; i++)
             {
-                result.children.splice(i, 1); //Invalid url delete it from the results
-                i--;
-                continue;
-            }
+                //Attempt to convert a url to a valid format
+                var url = convertURL(domain, result.children[i]);
 
-            //Set the child to the valid url format
-            result.children[i] = url;
-            localSet.add(url);
-
-            //We stop adding to the crawler once we have reached one of our limits
-            if (page.depth < instance.depthLimit && instance.map.length < instance.pageLimit)
-            {
-                if (instance.map.contains(url))
+                //URL is invalid remove from possible results
+                if (url == null || localSet.contains(url))
+                {
+                    result.children.splice(i, 1); //Invalid url delete it from the results
+                    i--;
                     continue;
+                }
 
-                //Add the new value to the queue/stack and add it to the map of already known sites
-                instance.map.add(url);
-                instance.queue.push({ depth: page.depth + 1, parent: page.url, url: url });
+                //Set the child to the valid url format
+                result.children[i] = url;
+                localSet.add(url);
+
+                //We stop adding to the crawler once we have reached one of our limits
+                if (page.depth < instance.depthLimit && instance.map.length < instance.pageLimit)
+                {
+                    if (instance.map.contains(url))
+                        continue;
+
+                    //Add the new value to the queue/stack and add it to the map of already known sites
+                    instance.map.add(url);
+                    instance.queue.push({ depth: page.depth + 1, parent: page.url, url: url });
+                }
             }
         }
 
