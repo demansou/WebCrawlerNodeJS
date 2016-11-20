@@ -87,3 +87,24 @@ graphObj.addPacket(crawlerCallbackObject);
 query.put(crawlerCallbackObject.id, graphObj, 300000);
 
 // NEED CLIENT QUERY AND SERVER RESPONSE WITH DATA
+
+
+var newReturnObject = {
+    id: "string",
+    parent: "url",
+    title: "string",
+    url: "url",
+    depth: 0, // or other integer
+    children: [
+        "url",
+        "url",
+        "url"
+    ],
+    keywordFound: true // or false
+};
+
+var responseObj = {
+    success: true, // or false
+    message: "string",
+    data: newReturnObject
+};
