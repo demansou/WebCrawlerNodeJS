@@ -90,6 +90,10 @@ function isValidChild(child) {
         if (child.startsWith("javascript:")) {
             return false;
         }
+        // filters out tel links
+        if (child.startsWith("tel:")) {
+            return false;
+        }
         // filters out hash links
         if (child.startsWith("#"))
         {
@@ -305,6 +309,7 @@ function IncrementCrawl(id,callback)
         }
 
         result.parent = page.parent;
+        result.depth = page.depth;
        
         //Refresh the cache
         cache.put(id, instance, Timeout);
