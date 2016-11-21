@@ -83,15 +83,15 @@ function crawlUrl(url, keyword, callback) {
 function isValidChild(child) {
     if (child != undefined) {
         // filters out mailto links
-        if (child.startsWith("mailto:") || child.search("mailto:") !== -1) {
+        if (child.startsWith("mailto:")) {
             return false;
         }
         // filters out javascript links
-        if (child.startsWith("javascript:") || child.search("javascript:") !== -1) {
+        if (child.startsWith("javascript:")) {
             return false;
         }
         // filters out tel links
-        if (child.startsWith("tel:") || child.search("tel:") !== -1) {
+        if (child.startsWith("tel:")) {
             return false;
         }
         // filters out hash links
@@ -99,11 +99,12 @@ function isValidChild(child) {
         {
             return false;
         }
+        /*
         // filters out truncated links from certain CMS schemes
         if (child.search("...") !== -1) {
             return false;
         }
-
+        */
         // filters out files unless it's an HTML file
         // other files have no possible links
         // must be placed after other filters so that it doesn't catch local urls
@@ -274,7 +275,6 @@ function IncrementCrawl(id,callback)
             return;
         }
 
-        // keyword not found, continue crawling
         var urlParse = parser.parse(page.url);
         var domain = urlParse.protocol + "//" + urlParse.hostname;
         var localSet = new HashSet();
