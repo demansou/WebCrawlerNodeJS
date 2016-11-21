@@ -83,20 +83,24 @@ function crawlUrl(url, keyword, callback) {
 function isValidChild(child) {
     if (child != undefined) {
         // filters out mailto links
-        if (child.startsWith("mailto:")) {
+        if (child.startsWith("mailto:") || child.search("mailto:") !== -1) {
             return false;
         }
         // filters out javascript links
-        if (child.startsWith("javascript:")) {
+        if (child.startsWith("javascript:") || child.search("javascript:") !== -1) {
             return false;
         }
         // filters out tel links
-        if (child.startsWith("tel:")) {
+        if (child.startsWith("tel:") || child.search("tel:") !== -1) {
             return false;
         }
         // filters out hash links
         if (child.startsWith("#"))
         {
+            return false;
+        }
+        // filters out truncated links from certain CMS schemes
+        if (child.search("...") !== -1) {
             return false;
         }
 
@@ -153,6 +157,9 @@ function isRelativeUrl(child) {
  * @returns {boolean}
  */
 function containsText(htmlBodyText, keyword) {
+    if (keyword.length <= 0) {
+        return false;
+    }
     if (htmlBodyText.search(keyword) === -1) {
         return false;
     }
@@ -267,49 +274,50 @@ function IncrementCrawl(id,callback)
             return;
         }
 
-        if (result.keywordFound) {
-            // keyword found, end crawling and clear queue
-            instance.queue = [];
-        }
-        else {
-            // keyword not found, continue crawling
-            var urlParse = parser.parse(page.url);
-            var domain = urlParse.protocol + "//" + urlParse.hostname;
-            var localSet = new HashSet();
+        // keyword not found, continue crawling
+        var urlParse = parser.parse(page.url);
+        var domain = urlParse.protocol + "//" + urlParse.hostname;
+        var localSet = new HashSet();
 
 
-            for (var i = 0; i < result.children.length; i++)
+        for (var i = 0; i < result.children.length; i++)
+        {
+            //Attempt to convert a url to a valid format
+            var url = convertURL(domain, result.children[i]);
+
+            //URL is invalid remove from possible results
+            if (url == null || localSet.contains(url))
             {
-                //Attempt to convert a url to a valid format
-                var url = convertURL(domain, result.children[i]);
-
-                //URL is invalid remove from possible results
-                if (url == null || localSet.contains(url))
-                {
-                    result.children.splice(i, 1); //Invalid url delete it from the results
-                    i--;
-                    continue;
-                }
-
-                //Set the child to the valid url format
-                result.children[i] = url;
-                localSet.add(url);
-
-                //We stop adding to the crawler once we have reached one of our limits
-                if (page.depth < instance.depthLimit && instance.map.length < instance.pageLimit)
-                {
-                    if (instance.map.contains(url))
-                        continue;
-
-                    //Add the new value to the queue/stack and add it to the map of already known sites
-                    instance.map.add(url);
-                    instance.queue.push({ depth: page.depth + 1, parent: page.url, url: url });
-                }
+                result.children.splice(i, 1); //Invalid url delete it from the results
+                i--;
+                continue;
             }
+
+            //Set the child to the valid url format
+            result.children[i] = url;
+            localSet.add(url);
+
+            //We stop adding to the crawler once we have reached one of our limits
+            if (page.depth < instance.depthLimit && instance.map.length < instance.pageLimit) {
+                if (instance.map.contains(url))
+                    continue;
+
+                //Add the new value to the queue/stack and add it to the map of already known sites
+                instance.map.add(url);
+
+                // If keyword found, no need to add to instance queue since queue will be cleared
+                if(result.keywordFound === false)
+                    instance.queue.push({depth: page.depth + 1, parent: page.url, url: url});
+            }
+
         }
 
         result.parent = page.parent;
         result.depth = page.depth;
+
+        // If keyword found, clear queue. Next request will return end of crawl.
+        if (result.keywordFound === true)
+            instance.queue = [];
        
         //Refresh the cache
         cache.put(id, instance, Timeout);
