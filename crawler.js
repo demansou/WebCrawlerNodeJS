@@ -4,7 +4,7 @@ var request = require('request');
 var cheerio = require('cheerio');
 var cache = require('memory-cache');
 
-var Timeout = 1200000;
+var Timeout = 300000;
 var MaxPages = 10000;
 var MaxDepth = 32;
 
@@ -33,7 +33,7 @@ function shuffle(a)
  * @param url
  * @param callback
  */
-function crawlUrl(url, callback) {
+function crawlUrl(url, keyword, callback) {
     request(url, function (err, res, html) {
         if (err)
         {
@@ -47,17 +47,30 @@ function crawlUrl(url, callback) {
         else {
             var $ = cheerio.load(html);
             var title = $("title").text();
-            var children = $("html > body a");
+            var links = $("html > body a");
+
+
+            var hasKeyword = false, i = 0, len = 0;
+            if (keyword !== null && keyword.length > 0)
+            {
+                var items = $("html > body").text();
+
+                if (items !== null && items.toLowerCase().indexOf(keyword) >= 0)
+                {
+                       hasKeyword = true;
+                }
+            }
 
             var callbackObj = {
                 title: title,
                 url: url,
+                hasKeyword: hasKeyword,
                 children: []
             };
 
-            for (var i = 0; i < children.length; i++)
+            for (i = 0; i < links.length; i++)
             {
-                callbackObj.children.push(children[i].attribs.href);
+                callbackObj.children.push(links[i].attribs.href);
             }
 
             shuffle(callbackObj.children);
@@ -78,7 +91,7 @@ function crawlUrl(url, callback) {
  * @returns {boolean}
  */
 function isValidChild(child) {
-    if (child != undefined) {
+    if (child !== undefined) {
         // filters out mailto links
         if (child.startsWith("mailto:")) {
             return false;
@@ -119,7 +132,7 @@ function isValidChild(child) {
  * @returns {boolean}
  */
 function isRelativeUrl(child) {
-    if (child != undefined) {
+    if (child !== undefined) {
         /* Special cases where links begin with `/` */
         if (child.startsWith("/")) {
             if (/\/\//.test(child)) {
@@ -139,6 +152,7 @@ function isRelativeUrl(child) {
  * Converts a url to a valid format for the crawler
  * @param domain
  * @param url
+ * @returns modified-url
  */
 function convertURL(domain,url)
 {
@@ -185,7 +199,7 @@ function CreateCrawlInstance(startPage, searchType, keyword, pageLimit, depthLim
     var instance = {
         id: generateId(),
         searchType: searchType,
-        keyword: keyword,
+        keyword: keyword === null ? "" : keyword.toLowerCase(),
         pageLimit: pageLimit,
         depthLimit: depthLimit,
         map: new HashSet(),
@@ -195,10 +209,10 @@ function CreateCrawlInstance(startPage, searchType, keyword, pageLimit, depthLim
 
     instance.map.add(startPage);
 
-    if (instance.depthLimit == null || instance.depthLimit > MaxDepth)
+    if (instance.depthLimit === null || instance.depthLimit > MaxDepth)
         instance.depthLimit = MaxDepth;
 
-    if (instance.pageLimit == null || instance.pageLimit > MaxPages)
+    if (instance.pageLimit === null || instance.pageLimit > MaxPages)
         instance.pageLimit = MaxPages;
 
     cache.put(instance.id, instance, Timeout);
@@ -215,16 +229,16 @@ function IncrementCrawl(id,callback)
 {
     var instance = cache.get(id);
 
-    if (instance == null)
+    if (instance === null)
     {
-        callback({ success: false, message: "Crawler is finished or does not exist.", data: null}, null);
+        callback({ success: false, message: "Crawler is finished or does not exist.", hasKeyword: false, data: null}, null);
         return;
     }
 
-    if (instance.queue.length == 0)
+    if (instance.queue.length === 0)
     {
         cache.del(id);
-        callback(null,{success: true, message: "Crawler is finished.", data: null });
+        callback(null, { success: true, message: "Crawler is finished.", hasKeyword: false, data: null });
         return;   
     }
 
@@ -235,9 +249,9 @@ function IncrementCrawl(id,callback)
     else
         page = instance.queue.pop();
 
-    crawlUrl(page.url, function (err, result) {
+    crawlUrl(page.url, instance.keyword, function (err, result) {
 
-        if (err || result == null)
+        if (err || result === null)
         {
             IncrementCrawl(id, callback);
             return;
@@ -246,7 +260,7 @@ function IncrementCrawl(id,callback)
         var urlParse = parser.parse(page.url);
         var domain = urlParse.protocol + "//" + urlParse.hostname;
         var localSet = new HashSet();
-
+        localSet.add(page.url);
 
         for (var i = 0; i < result.children.length; i++)
         {
@@ -254,7 +268,7 @@ function IncrementCrawl(id,callback)
             var url = convertURL(domain, result.children[i]);
 
             //URL is invalid remove from possible results
-            if (url == null || localSet.contains(url))
+            if (url === null || localSet.contains(url))
             {
                 result.children.splice(i, 1); //Invalid url delete it from the results
                 i--;
@@ -277,6 +291,9 @@ function IncrementCrawl(id,callback)
             }
         }
 
+        if (result.hasKeyword) //We should terminate the search if the keyword is finished
+            instance.queue = [];
+
         result.parent = page.parent;
        
         //Refresh the cache
@@ -284,7 +301,7 @@ function IncrementCrawl(id,callback)
 
         result.id = id;
         //Send back to the data transfer layer
-        callback(null, { success: true, message: "Page found.", data: result });
+        callback(null, { success: true, hasKeyword: result.hasKeyword, message: "Page found.", data: result });
     });
 }
 

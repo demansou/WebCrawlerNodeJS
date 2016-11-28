@@ -133,6 +133,9 @@
                 {
                     var node = this.getValue(packet.children[i]);
 
+                    if (node.url === value.url)
+                        continue;
+
                     if(node == null)
                     {
                         node = new CrawlerNode(value, null, packet.children[i]);

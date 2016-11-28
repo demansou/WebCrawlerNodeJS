@@ -94,6 +94,8 @@ var CrawlerGraph = (function () {
             if (packet.children != null) {
                 for (var i = 0, len = packet.children.length; i < len; i++) {
                     var node = this.getValue(packet.children[i]);
+                    if (node.url === value.url)
+                        continue;
                     if (node == null) {
                         node = new CrawlerNode(value, null, packet.children[i]);
                         this.map.addKeyValue(node.url, node);
@@ -153,6 +155,8 @@ var Map = (function () {
         this.elementCount = 0;
     };
     Map.prototype.getValue = function (key) {
+        if (key == null)
+            return null;
         //Hash the key so we get constant time lookups
         var index = Math.round((this.hash(key) % this.map.length + this.map.length - 1) / 2);
         //Index into the map

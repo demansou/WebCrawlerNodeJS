@@ -1,9 +1,10 @@
 /// <reference path="jquery.d.ts" />
+var graph = new CrawlerGraph();
+/*
 $(document).ready(function () {
 
-    var graph = new CrawlerGraph();
     var visited = 0;
-    graph.requestPacket("http://amazon.com", "breadth", "", 10000, 5, function (err, g, packet)
+    graph.requestPacket("https://amazon.com", "depth", "", 10000, 5, function (err, g, packet)
     {
         if (err)
         {
@@ -13,12 +14,15 @@ $(document).ready(function () {
 
         visited++;
         console.log("visited: " + visited + " url: " + packet.url + "  count: " + g.map.elementCount);
-        /*
-        for (var i = 0; i < packet.children.length; i++)
-        {
-            console.log(packet.children[i]);
-        }
-        */
+    });
+});
+*/
+$(document).ready(function () {
+      graph.requestPacket("https://www.youtube.com", "breadth", "Subscriptions", 500, 500, function (err, g, packet) {
+        if(err)
+              console.log(err);
+
+        console.log(packet);
     });
 });
 //# sourceMappingURL=execute.js.map

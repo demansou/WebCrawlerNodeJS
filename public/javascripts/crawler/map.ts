@@ -39,6 +39,9 @@
 
     getValue(key: string)
     {
+        if (key == null)
+            return null;
+
         //Hash the key so we get constant time lookups
         var index = Math.round((this.hash(key) % this.map.length + this.map.length - 1) / 2);
 

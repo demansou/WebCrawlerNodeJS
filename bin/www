@@ -7,6 +7,8 @@
 var app = require('../app');
 var debug = require('debug')('GagnamCrawlerProject:server');
 var http = require('http');
+// turn off limits by default (BE CAREFUL)
+require('events').EventEmitter.prototype._maxListeners = 0;
 
 /**
  * Get port from environment and store in Express.
