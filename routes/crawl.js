@@ -37,9 +37,7 @@ router.post('/', function (req, res, next) {
             res.json({ success: false, message: "Error: depth limit is not a valid number or is not greater than 0.", data: null });
             return;
         }
-
-
-        id = crawler.CreateCrawlInstance(req.body['startPage'], req.body['searchType'], req.body['keyword'], req.body['pageLimit'], req.body['depth'], req.body['depthLimit']);
+        id = crawler.CreateCrawlInstance(req.body['startPage'], req.body['searchType'], req.body['keyword'], req.body['pageLimit'], req.body['depthLimit']);
     }
 
     //Terminate the crawl if it makes sense
@@ -51,7 +49,7 @@ router.post('/', function (req, res, next) {
     }
 
     //Increment the crawl and get the next set of data
-    crawler.IncrementCrawl(id, req.body['depth'], function (err, result) {
+    crawler.IncrementCrawl(id, function (err, result) {
 
         if (err)
         {

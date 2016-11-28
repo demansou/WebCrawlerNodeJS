@@ -209,10 +209,9 @@ function generateId()
  * @param searchType
  * @param keyword
  * @param pageLimit
- * @param depth
  * @param depthLimit
  */
-function CreateCrawlInstance(startPage, searchType, keyword, pageLimit, depth, depthLimit)
+function CreateCrawlInstance(startPage, searchType, keyword, pageLimit, depthLimit)
 {
     var instance = {
         id: generateId(),
@@ -220,8 +219,9 @@ function CreateCrawlInstance(startPage, searchType, keyword, pageLimit, depth, d
         keyword: keyword === null ? "" : keyword.toLowerCase(),
         pageLimit: pageLimit,
         depthLimit: depthLimit,
+        depth: 0,
         map: new HashSet(),
-        queue: [{ depth: parseInt(depth), parent: null, url: startPage }],
+        queue: [{ depth: 0, parent: null, url: startPage }],
         results: []
     };
 
@@ -241,10 +241,9 @@ function CreateCrawlInstance(startPage, searchType, keyword, pageLimit, depth, d
 /**
  * Get the next stage of the crawl
  * @param id
- * @param depth
  * @param callback
  */
-function IncrementCrawl(id, depth, callback)
+function IncrementCrawl(id, callback)
 {
     var instance = cache.get(id);
 
@@ -271,13 +270,13 @@ function IncrementCrawl(id, depth, callback)
             // if instance queue length is 0, end crawl
             if (instance.queue.length === 0) {
                 cache.del(id);
-                callback(null, { success: true, message: "Depth-first search ended crawl.", hasKeyword: false, data: null });
+                callback(null, { success: true, message: "Depth-first search ended crawl. Crawler is finished.", hasKeyword: false, data: null });
                 return;
             }
             page = instance.queue.pop();
-            // console.log("depth:\t" + depth + "\t" + typeof(depth));
+            // console.log("instance.depth:\t" + instance.depth + "\t" + typeof(instance.depth));
             // console.log("page.depth:\t" + page.depth + "\t" + typeof(page.depth));
-            if (parseInt(depth) <= page.depth) { // page depth must be greater than or equal to request depth or will clear queue
+            if (instance.depth <= page.depth) { // page depth must be greater than or equal to request depth or will clear queue
                 break;
             }
         }
@@ -314,20 +313,20 @@ function IncrementCrawl(id, depth, callback)
             result.children[i] = url;
             localSet.add(url);
 
-            // console.log("instance.map.length:\t" + instance.map.length + "\t" + typeof(instance.map.length));
-            // console.log("instance.pageLimit:\t" + instance.pageLimit + "\t" + typeof(instance.pageLimit));
+            //console.log("instance.map.length:\t" + instance.map.length + "\t" + typeof(instance.map.length));
+            //console.log("instance.pageLimit:\t" + instance.pageLimit + "\t" + typeof(instance.pageLimit));
 
             //We stop adding to the crawler once we have reached one of our limits
-            if (page.depth < instance.depthLimit && instance.map.length < instance.pageLimit)
+            if (parseInt(page.depth) < instance.depthLimit && instance.map.length < instance.pageLimit)
             {
                 if (instance.map.contains(url))
                     continue;
 
-                // console.log("child added:\t" + url);
+                //console.log("child added:\t" + url + "\t" + (parseInt(page.depth) + 1));
 
                 //Add the new value to the queue/stack and add it to the map of already known sites
                 instance.map.add(url);
-                instance.queue.push({ depth: parseInt(page.depth) + 1, parent: page.url, url: url });
+                instance.queue.push({ depth: (parseInt(page.depth) + 1), parent: page.url, url: url });
             }
         }
 
@@ -335,12 +334,14 @@ function IncrementCrawl(id, depth, callback)
             instance.queue = [];
 
         result.parent = page.parent;
-       
+
+        // increment depth (only needed in depth-first search)
+        instance.depth += 1;
+
         //Refresh the cache
         cache.put(id, instance, Timeout);
 
-        // increment depth
-        result.depth = parseInt(depth) + 1;
+
         result.id = id;
         //Send back to the data transfer layer
         callback(null, { success: true, hasKeyword: result.hasKeyword, message: "Page found.", data: result });
