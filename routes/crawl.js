@@ -39,7 +39,7 @@ router.post('/', function (req, res, next) {
         }
 
 
-        id = crawler.CreateCrawlInstance(req.body['startPage'], req.body['searchType'], req.body['keyword'], req.body['pageLimit'], req.body['depthLimit']);
+        id = crawler.CreateCrawlInstance(req.body['startPage'], req.body['searchType'], req.body['keyword'], req.body['pageLimit'], req.body['depth'], req.body['depthLimit']);
     }
 
     //Terminate the crawl if it makes sense
@@ -51,7 +51,7 @@ router.post('/', function (req, res, next) {
     }
 
     //Increment the crawl and get the next set of data
-    crawler.IncrementCrawl(id, function (err, result) {
+    crawler.IncrementCrawl(id, req.body['depth'], function (err, result) {
 
         if (err)
         {

@@ -1,4 +1,4 @@
-﻿var parser = require('url');
+﻿﻿var parser = require('url');
 var HashSet = require('hashset');
 var request = require('request');
 var cheerio = require('cheerio');
@@ -100,11 +100,28 @@ function isValidChild(child) {
         if (child.startsWith("javascript:")) {
             return false;
         }
+        // filters out ftp links
+        if (child.startsWith("ftp:")) {
+            return false;
+        }
+        // filters out query links
+        if (child.startsWith("?")) {
+            return false;
+        }
         // filters out hash links
         if (child.startsWith("#"))
         {
             return false;
         }
+        // filters out `//` links
+        if (child.startsWith("//")) {
+            return false;
+        }
+        // filters out `../` links
+        if (child.startsWith("../")) {
+            return false;
+        }
+
 
         // filters out files unless it's an HTML file
         // other files have no possible links
@@ -192,9 +209,10 @@ function generateId()
  * @param searchType
  * @param keyword
  * @param pageLimit
+ * @param depth
  * @param depthLimit
  */
-function CreateCrawlInstance(startPage, searchType, keyword, pageLimit, depthLimit)
+function CreateCrawlInstance(startPage, searchType, keyword, pageLimit, depth, depthLimit)
 {
     var instance = {
         id: generateId(),
@@ -203,7 +221,7 @@ function CreateCrawlInstance(startPage, searchType, keyword, pageLimit, depthLim
         pageLimit: pageLimit,
         depthLimit: depthLimit,
         map: new HashSet(),
-        queue: [{ depth: 0, parent: null, url: startPage }],
+        queue: [{ depth: parseInt(depth), parent: null, url: startPage }],
         results: []
     };
 
@@ -223,9 +241,10 @@ function CreateCrawlInstance(startPage, searchType, keyword, pageLimit, depthLim
 /**
  * Get the next stage of the crawl
  * @param id
+ * @param depth
  * @param callback
  */
-function IncrementCrawl(id,callback)
+function IncrementCrawl(id, depth, callback)
 {
     var instance = cache.get(id);
 
@@ -246,8 +265,24 @@ function IncrementCrawl(id,callback)
     var page = null;
     if (instance.searchType === "breadth")
         page = instance.queue.shift();
-    else
-        page = instance.queue.pop();
+    else {
+        // for depth-first search, do not allow crawler to work backwards
+        while (true) {
+            // if instance queue length is 0, end crawl
+            if (instance.queue.length === 0) {
+                cache.del(id);
+                callback(null, { success: true, message: "Depth-first search ended crawl.", hasKeyword: false, data: null });
+                return;
+            }
+            page = instance.queue.pop();
+            // console.log("depth:\t" + depth + "\t" + typeof(depth));
+            // console.log("page.depth:\t" + page.depth + "\t" + typeof(page.depth));
+            if (parseInt(depth) <= page.depth) { // page depth must be greater than or equal to request depth or will clear queue
+                break;
+            }
+        }
+
+    }
 
     crawlUrl(page.url, instance.keyword, function (err, result) {
 
@@ -279,15 +314,20 @@ function IncrementCrawl(id,callback)
             result.children[i] = url;
             localSet.add(url);
 
+            // console.log("instance.map.length:\t" + instance.map.length + "\t" + typeof(instance.map.length));
+            // console.log("instance.pageLimit:\t" + instance.pageLimit + "\t" + typeof(instance.pageLimit));
+
             //We stop adding to the crawler once we have reached one of our limits
             if (page.depth < instance.depthLimit && instance.map.length < instance.pageLimit)
             {
                 if (instance.map.contains(url))
                     continue;
 
+                // console.log("child added:\t" + url);
+
                 //Add the new value to the queue/stack and add it to the map of already known sites
                 instance.map.add(url);
-                instance.queue.push({ depth: page.depth + 1, parent: page.url, url: url });
+                instance.queue.push({ depth: parseInt(page.depth) + 1, parent: page.url, url: url });
             }
         }
 
@@ -299,6 +339,8 @@ function IncrementCrawl(id,callback)
         //Refresh the cache
         cache.put(id, instance, Timeout);
 
+        // increment depth
+        result.depth = parseInt(depth) + 1;
         result.id = id;
         //Send back to the data transfer layer
         callback(null, { success: true, hasKeyword: result.hasKeyword, message: "Page found.", data: result });
