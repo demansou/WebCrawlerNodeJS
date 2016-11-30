@@ -4,7 +4,7 @@ var request = require('request');
 var cheerio = require('cheerio');
 var cache = require('memory-cache');
 
-var Timeout = 300000;
+var Timeout = 1800000;
 var MaxPages = 10000;
 var MaxDepth = 32;
 
@@ -34,7 +34,7 @@ function shuffle(a)
  * @param callback
  */
 function crawlUrl(url, keyword, callback) {
-    request(url, function (err, res, html) {
+    request({ url: url, forever: true }, function (err, res, html) {
         if (err)
         {
             callback(err);
@@ -199,7 +199,7 @@ function CreateCrawlInstance(startPage, searchType, keyword, pageLimit, depthLim
     var instance = {
         id: generateId(),
         searchType: searchType,
-        keyword: keyword === null ? "" : keyword.toLowerCase(),
+        keyword: keyword === undefined || keyword === null ? "" : keyword.toLowerCase(),
         pageLimit: pageLimit,
         depthLimit: depthLimit,
         map: new HashSet(),
@@ -251,7 +251,7 @@ function IncrementCrawl(id,callback)
 
     crawlUrl(page.url, instance.keyword, function (err, result) {
 
-        if (err || result === null)
+        if (err || result === undefined || result === null)
         {
             IncrementCrawl(id, callback);
             return;
@@ -297,7 +297,7 @@ function IncrementCrawl(id,callback)
         result.parent = page.parent;
        
         //Refresh the cache
-        cache.put(id, instance, Timeout);
+       // cache.put(id, instance, Timeout);
 
         result.id = id;
         //Send back to the data transfer layer

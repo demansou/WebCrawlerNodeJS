@@ -4,4 +4,5 @@
     title: string;
     url: string;
     children: Array<string>;
+    hasKeyword: boolean;
 }

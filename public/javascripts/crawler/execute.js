@@ -18,7 +18,7 @@ $(document).ready(function () {
 });
 */
 $(document).ready(function () {
-      graph.requestPacket("https://www.youtube.com", "breadth", "Subscriptions", 500, 500, function (err, g, packet) {
+      graph.requestPacket("https://www.youtube.com", "breadth","", 500, 500, function (err, g, packet) {
         if(err)
               console.log(err);
 

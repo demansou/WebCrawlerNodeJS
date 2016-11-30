@@ -10,7 +10,8 @@
         this.root = null;
         this.map = new Map<CrawlerNode>();
         this.id = null;
-        this.domain = "http://localhost:3000/crawl";
+        //this.domain = "http://localhost:3000/crawl";
+        this.domain = "https://beatemup-1097.appspot.com/crawl";
     }
 
     clear()
@@ -102,6 +103,8 @@
         {
             this.map.clear();
             this.root = new CrawlerNode(null, packet.title, packet.url);
+            if (packet.hasKeyword)
+                this.root.hasKeyword = true;
 
             this.map.addKeyValue(this.root.url, this.root);
             for (var i = 0, len = packet.children.length; i < len; i++)
@@ -126,6 +129,9 @@
             //We have now visited so we know the title!
             value.title = packet.title;
 
+            if (packet.hasKeyword)
+                value.hasKeyword = true;
+
             //Create the children for the node we didn't have before
             if (packet.children != null)
             {
@@ -133,7 +139,7 @@
                 {
                     var node = this.getValue(packet.children[i]);
 
-                    if (node.url === value.url)
+                    if(node !== null && node.url === value.url)
                         continue;
 
                     if(node == null)

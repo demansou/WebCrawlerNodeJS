@@ -4,7 +4,7 @@ var CrawlerGraph = (function () {
         this.map = new Map();
         this.id = null;
         //this.domain = "http://localhost:3000/crawl";
-        this.domain = "https://gagnam.herokuapp.com/crawl";
+        this.domain = "https://beatemup-1097.appspot.com/crawl";
     }
     CrawlerGraph.prototype.clear = function () {
         this.id = null;
@@ -75,6 +75,8 @@ var CrawlerGraph = (function () {
         if (packet.parent == null) {
             this.map.clear();
             this.root = new CrawlerNode(null, packet.title, packet.url);
+            if (packet.hasKeyword)
+                this.root.hasKeyword = true;
             this.map.addKeyValue(this.root.url, this.root);
             for (var i = 0, len = packet.children.length; i < len; i++) {
                 //Create the node
@@ -91,6 +93,8 @@ var CrawlerGraph = (function () {
             }
             //We have now visited so we know the title!
             value.title = packet.title;
+            if (packet.hasKeyword)
+                value.hasKeyword = true;
             //Create the children for the node we didn't have before
             if (packet.children != null) {
                 for (var i = 0, len = packet.children.length; i < len; i++) {
@@ -113,9 +117,15 @@ var CrawlerNode = (function () {
         this.parent = parent;
         this.title = title;
         this.url = url;
+        this.hasKeyword = false;
         this.children = [];
     }
     return CrawlerNode;
+}());
+var CrawlerPacket = (function () {
+    function CrawlerPacket() {
+    }
+    return CrawlerPacket;
 }());
 var CrawlerPacketParent = (function () {
     function CrawlerPacketParent(title, url) {
@@ -123,11 +133,6 @@ var CrawlerPacketParent = (function () {
         this.url = url;
     }
     return CrawlerPacketParent;
-}());
-var CrawlerPacket = (function () {
-    function CrawlerPacket() {
-    }
-    return CrawlerPacket;
 }());
 var Map = (function () {
     function Map() {
