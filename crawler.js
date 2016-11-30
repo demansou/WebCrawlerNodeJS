@@ -100,6 +100,10 @@ function isValidChild(child) {
         if (child.startsWith("javascript:")) {
             return false;
         }
+        // filters out tel links
+        if (child.startsWith("tel:")) {
+            return false;
+        }
         // filters out ftp links
         if (child.startsWith("ftp:")) {
             return false;
@@ -216,7 +220,7 @@ function CreateCrawlInstance(startPage, searchType, keyword, pageLimit, depthLim
     var instance = {
         id: generateId(),
         searchType: searchType,
-        keyword: keyword === null ? "" : keyword.toLowerCase(),
+        keyword: keyword.toLowerCase(),
         pageLimit: pageLimit,
         depthLimit: depthLimit,
         depth: 0,
@@ -269,13 +273,11 @@ function IncrementCrawl(id, callback)
         while (true) {
             // if instance queue length is 0, end crawl
             if (instance.queue.length === 0) {
-                cache.del(id);
+                EndCrawl(id);
                 callback(null, { success: true, message: "Depth-first search ended crawl. Crawler is finished.", hasKeyword: false, data: null });
                 return;
             }
             page = instance.queue.pop();
-            // console.log("instance.depth:\t" + instance.depth + "\t" + typeof(instance.depth));
-            // console.log("page.depth:\t" + page.depth + "\t" + typeof(page.depth));
             if (instance.depth <= page.depth) { // page depth must be greater than or equal to request depth or will clear queue
                 break;
             }
@@ -285,8 +287,10 @@ function IncrementCrawl(id, callback)
 
     crawlUrl(page.url, instance.keyword, function (err, result) {
 
-        if (err || result === null)
-        {
+        // in cases where searchType is depth and no children are found in a node, or no results or error
+        // save instance without page that didn't work and restart iterator
+        if (err || result === null || (instance.searchType === "depth" && result.children.length === 0)) {
+            cache.put(instance.id, instance, Timeout);
             IncrementCrawl(id, callback);
             return;
         }
@@ -313,16 +317,11 @@ function IncrementCrawl(id, callback)
             result.children[i] = url;
             localSet.add(url);
 
-            //console.log("instance.map.length:\t" + instance.map.length + "\t" + typeof(instance.map.length));
-            //console.log("instance.pageLimit:\t" + instance.pageLimit + "\t" + typeof(instance.pageLimit));
-
             //We stop adding to the crawler once we have reached one of our limits
             if (parseInt(page.depth) < instance.depthLimit && instance.map.length < instance.pageLimit)
             {
                 if (instance.map.contains(url))
                     continue;
-
-                //console.log("child added:\t" + url + "\t" + (parseInt(page.depth) + 1));
 
                 //Add the new value to the queue/stack and add it to the map of already known sites
                 instance.map.add(url);
@@ -340,7 +339,6 @@ function IncrementCrawl(id, callback)
 
         //Refresh the cache
         cache.put(id, instance, Timeout);
-
 
         result.id = id;
         //Send back to the data transfer layer

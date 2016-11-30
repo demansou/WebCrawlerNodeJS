@@ -13,31 +13,39 @@ router.post('/', function (req, res, next) {
 
     if (id == null)
     {
-        if (req.body['startPage'] == null || req.body['startPage'].indexOf("http") !== 0)
+        var startPage = req.body['startPage'];
+        if (startPage == null || startPage.indexOf("http") !== 0)
         {
             res.json({ success: false, message: "Error: startPage was not included as a parameter or didn't have a valid http starting prefix.", data: null });
             return;
         } 
 
-        if (req.body['searchType'] == null || (req.body['searchType'] !== "depth" && req.body['searchType'] !== "breadth")) {
+        var searchType = req.body['searchType'];
+        if (searchType == null || (searchType !== "depth" && searchType !== "breadth")) {
             res.json({ success: false, message: "Error: searchType was either null or an invalid type. should be 'depth' or 'breadth'", data: null });
             return;
         }
 
-        var page = parseInt(req.body['pageLimit']);
-        if (isNaN(page) || page <= 0)
+        var keyword = req.body['keyword'];
+        if (keyword === null || keyword === undefined) {
+            keyword = "";
+        }
+
+        var pageLimit = parseInt(req.body['pageLimit']);
+        if (isNaN(pageLimit) || pageLimit <= 0)
         {
             res.json({ success: false, message: "Error: pageLimit was not a valid number or is not greater than 0.", data: null });
             return;
         }
 
-        var depth = parseInt(req.body['depthLimit']);
-        if (isNaN(page) || depth <= 0)
+        var depthLimit = parseInt(req.body['depthLimit']);
+        if (isNaN(depthLimit) || depthLimit <= 0)
         {
             res.json({ success: false, message: "Error: depth limit is not a valid number or is not greater than 0.", data: null });
             return;
         }
-        id = crawler.CreateCrawlInstance(req.body['startPage'], req.body['searchType'], req.body['keyword'], req.body['pageLimit'], req.body['depthLimit']);
+
+        id = crawler.CreateCrawlInstance(startPage, searchType, keyword, pageLimit, depthLimit);
     }
 
     //Terminate the crawl if it makes sense
