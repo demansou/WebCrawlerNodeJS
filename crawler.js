@@ -1,4 +1,4 @@
-﻿﻿var parser = require('url');
+﻿var parser = require('url');
 var HashSet = require('hashset');
 var request = require('request');
 var cheerio = require('cheerio');
@@ -57,7 +57,7 @@ function crawlUrl(url, keyword, callback) {
 
                 if (items !== null && items.toLowerCase().indexOf(keyword) >= 0)
                 {
-                       hasKeyword = true;
+                    hasKeyword = true;
                 }
             }
 
@@ -261,7 +261,7 @@ function IncrementCrawl(id, callback)
     {
         cache.del(id);
         callback(null, { success: true, message: "Crawler is finished.", hasKeyword: false, data: null });
-        return;   
+        return;
     }
 
 
@@ -341,6 +341,7 @@ function IncrementCrawl(id, callback)
         cache.put(id, instance, Timeout);
 
         result.id = id;
+
         //Send back to the data transfer layer
         callback(null, { success: true, hasKeyword: result.hasKeyword, message: "Page found.", data: result });
     });
